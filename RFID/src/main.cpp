@@ -2,32 +2,78 @@
 #include <MFRC522.h>
 #include <Arduino.h>
 
-#define RST_PIN        22         // Configurable, see typical pin layout above
-#define SS_PIN         21         // Configurable, see typical pin layout above
+#define RST_PIN    D3    
+#define SS_PIN     D4   
 
-MFRC522 mfrc522(SS_PIN, RST_PIN);  // Create MFRC522 instance
+MFRC522 mfrc522(SS_PIN, RST_PIN); // Create MFRC522 instance
 
-void setup() {
-	Serial.begin(9600);		// Initialize serial communications with the PC
-	while (!Serial);		// Do nothing if no serial port is opened (added for Arduinos based on ATMEGA32U4)
-	SPI.begin();			// Init SPI bus
-	mfrc522.PCD_Init();		// Init MFRC522
-	delay(4);				// Optional delay. Some board do need more time after init to be ready, see Readme
-	mfrc522.PCD_DumpVersionToSerial();	// Show details of PCD - MFRC522 Card Reader details
-	Serial.println(F("Scan PICC to see UID, SAK, type, and data blocks..."));
+int estado=0;
+
+boolean validateID();
+void setupRFID();
+
+void setup() 
+{
+  Serial.begin(9600);   // Inicia a serial
+  setupRFID();
 }
 
-void loop() {
-	// Reset the loop if no new card present on the sensor/reader. This saves the entire process when idle.
-	if ( ! mfrc522.PICC_IsNewCardPresent()) {
-		return;
-	}
+void loop() 
+{
+  if(estado==0){
+	  if (validateID()){
+      estado = 1;
+    }
+  }
+  if(estado == 1){
+    Serial.println("Estado 1");
+  }
+  
+}
 
-	// Select one of the cards
-	if ( ! mfrc522.PICC_ReadCardSerial()) {
-		return;
-	}
+void setupRFID(){
+  SPI.begin();      // Inicia  SPI bus
+  mfrc522.PCD_Init();   // Inicia MFRC522
 
-  // Dump debug info about the card; PICC_HaltA() is automatically called
-	mfrc522.PICC_DumpToSerial(&(mfrc522.uid));
+  Serial.println("Aproxime o seu cartao do leitor...");
+  Serial.println();
+}
+
+boolean validateID(){
+  //Serial.println("Aproxime o seu cartao do leitor...");
+  //Serial.println();
+  // Procura por cartao RFID
+  if( ! mfrc522.PICC_IsNewCardPresent()) 
+  {
+    return false;
+  }
+  // Seleciona o cartao RFID
+  if ( ! mfrc522.PICC_ReadCardSerial()) 
+  {
+    return false;
+  }
+  //Mostra UID na serial
+  Serial.print("UID da tag :");
+  String conteudo= "";
+  byte letra;
+  for (byte i = 0; i < mfrc522.uid.size; i++) 
+  {
+     //Serial.print(String(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " "));
+     //Serial.print(String(mfrc522.uid.uidByte[i], HEX));
+     conteudo.concat(String(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " "));
+     conteudo.concat(String(mfrc522.uid.uidByte[i], HEX));
+  }
+  conteudo.toUpperCase();
+  Serial.println(conteudo);
+  
+
+  if(conteudo.substring(1) == "47 9E 7F 5F") //UID 1 - Cartao
+  {
+    Serial.println("vaca Identificada! - Vaca 1");
+    Serial.println();
+	return true;
+  }
+  else{
+	return false;
+  }
 }
