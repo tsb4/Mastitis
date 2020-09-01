@@ -43,8 +43,8 @@ void loop()
     }
   }
   if(estado == 2){
-    Serial.println("Estado 2");
-    for(int i=0;i<192;i++) temp[i] =10.31;
+    Serial.println("Esperando envio de dados...");
+    for(int i=0;i<192;i++) temp[i] =28.42;
     estado =3;
     generatePacket();
   }
