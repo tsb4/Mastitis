@@ -1,32 +1,32 @@
-//#include <SPI.h>
-//#include <Wire.h>
-//#include <MFRC522.h>
+#include <SPI.h>
+#include <Wire.h>
+#include <MFRC522.h>
 #include <Arduino.h>
-//#include <WiFi.h> 
-#include <ESP8266WiFi.h> 
-#include <ESP8266WebServer.h>
-//#include "MLX90641_API.h"
-//#include "MLX9064X_I2C_Driver.h"
+#include <WiFi.h> 
+//#include <ESP8266WiFi.h> 
+//#include <ESP8266WebServer.h>
+#include "MLX90641_API.h"
+#include "MLX9064X_I2C_Driver.h"
 
 #define debug  Serial
 
-//const byte MLX90641_address = 0x33; //Default 7-bit unshifted address of the MLX90641
-//#define TA_SHIFT 8 //Default shift for MLX90641 in open air
-//uint16_t eeMLX90641[832];
-//float MLX90641To[192];
-//uint16_t MLX90641Frame[242];
-//paramsMLX90641 MLX90641;
-//int errorno = 0;
+const byte MLX90641_address = 0x33; //Default 7-bit unshifted address of the MLX90641
+#define TA_SHIFT 8 //Default shift for MLX90641 in open air
+uint16_t eeMLX90641[832];
+float MLX90641To[192];
+uint16_t MLX90641Frame[242];
+paramsMLX90641 MLX90641;
+int errorno = 0;
 
 const char* ssid = "Heim";
 const char* password = "acgabensb";
 WiFiServer server(80);
 //ESP8266WebServer server(80);
 
-//#define RST_PIN    15   
-//#define SS_PIN     2   
-//
-//MFRC522 mfrc522(SS_PIN, RST_PIN); // Create MFRC522 instance
+#define RST_PIN    15   
+#define SS_PIN     2   
+
+MFRC522 mfrc522(SS_PIN, RST_PIN); // Create MFRC522 instance
 
 int estado=0;
 int id;
@@ -50,15 +50,15 @@ String header;
 void setup() 
 {
   Serial.begin(115200);   // Inicia a serial
-  //setupRFID();
+  setupRFID();
   setupWIFI();
-  //setupMLX();
+  setupMLX();
 }
 
 
 void loop() 
 {
-  is_finished = false;
+  /*is_finished = false;
   for(int i=0;i<192;i++){
     temp[i] = 28.35;
   }
@@ -67,8 +67,8 @@ void loop()
   while(!is_finished) messageWIFI();
   Serial.println("---------------------------------------------------------------------------------------------------------------------------");
   Serial.println("------------------------------------------------------------------------------------------------------------------------------------------------------------------");
-
-  /*if(estado==0){
+ */
+  if(estado==0){
     printRequestRFID();
     estado =1;
   }
@@ -84,15 +84,17 @@ void loop()
     for(int i=0;i<192;i++){
       temp[i] = MLX90641To[i];
     }
-    estado =3;
     generatePacket();
+    messageWIFI();
+    if(is_finished) estado =3;
   }
   if(estado==3){
-    if(messageWIFI()) estado = 0;
+    is_finished = false;
+    estado = 0;
   }
-  */
+  
 }
-/*
+
 void printRequestRFID(){
   Serial.println("Aproxime o seu cartao do leitor...");
   Serial.println();
@@ -144,7 +146,7 @@ boolean validateID(){
 	  return false;
   }
 }
-*/
+
 void setupWIFI(){
   Serial.println();
   Serial.print("Conectando-se a ");
@@ -218,13 +220,13 @@ void generatePacket(){
   //packet.concat(";");
   for(int i=0;i<192;i++){
     packet.concat(String(temp[i]));
-    packet.concat(",");
+    if( i!=191) packet.concat(",");
   }
-  packet = "27.44,27.13,26.93,27.05,27.09,27.24,27.17,27.25,27.26,27.08,27.12,27.14,27.20,27.21,27.35,27.37,28.09,27.74,27.75,27.61,27.67,27.70,27.81,27.79,27.27,27.18,27.11,27.26,27.32,27.44,27.46,27.49,31.03,30.96,30.70,30.16,29.67,29.05,28.39,28.13,27.84,27.48,27.30,27.51,27.50,27.58,27.53,27.57,33.37,33.62,33.62,33.43,33.05,32.46,31.39,30.26,29.48,28.69,28.73,28.37,27.93,27.58,27.61,27.63,33.98,34.30,34.37,34.48,34.43,34.38,34.03,33.48,32.97,32.44,32.90,31.53,28.42,27.94,27.75,27.36,34.40,34.61,34.51,34.61,34.70,34.72,34.65,34.55,34.46,34.20,33.97,33.45,30.32,28.24,27.74,27.69,34.29,34.32,34.57,34.79,34.72,34.69,34.82,34.84,34.73,34.60,34.42,33.81,31.35,28.41,27.86,27.57,34.40,34.54,34.45,34.73,34.83,34.85,34.86,34.93,34.74,34.62,34.02,32.84,29.62,28.04,27.94,27.60,34.29,34.61,34.70,34.73,34.76,34.73,34.75,34.83,34.45,34.04,32.81,30.41,28.49,28.04,27.93,27.51,34.19,34.60,34.81,34.63,34.75,34.71,34.71,34.46,34.16,32.66,30.61,29.03,28.29,28.00,27.83,27.54,34.21,34.51,34.58,34.58,34.45,34.54,34.40,33.73,32.11,30.24,28.95,28.31,27.97,27.60,27.34,27.08,33.15,33.97,34.05,33.97,34.32,34.13,33.08,31.29,29.77,28.94,28.36,28.14,27.66,27.33,26.88,27.06";
+  //packet = "27.44,27.13,26.93,27.05,27.09,27.24,27.17,27.25,27.26,27.08,27.12,27.14,27.20,27.21,27.35,27.37,28.09,27.74,27.75,27.61,27.67,27.70,27.81,27.79,27.27,27.18,27.11,27.26,27.32,27.44,27.46,27.49,31.03,30.96,30.70,30.16,29.67,29.05,28.39,28.13,27.84,27.48,27.30,27.51,27.50,27.58,27.53,27.57,33.37,33.62,33.62,33.43,33.05,32.46,31.39,30.26,29.48,28.69,28.73,28.37,27.93,27.58,27.61,27.63,33.98,34.30,34.37,34.48,34.43,34.38,34.03,33.48,32.97,32.44,32.90,31.53,28.42,27.94,27.75,27.36,34.40,34.61,34.51,34.61,34.70,34.72,34.65,34.55,34.46,34.20,33.97,33.45,30.32,28.24,27.74,27.69,34.29,34.32,34.57,34.79,34.72,34.69,34.82,34.84,34.73,34.60,34.42,33.81,31.35,28.41,27.86,27.57,34.40,34.54,34.45,34.73,34.83,34.85,34.86,34.93,34.74,34.62,34.02,32.84,29.62,28.04,27.94,27.60,34.29,34.61,34.70,34.73,34.76,34.73,34.75,34.83,34.45,34.04,32.81,30.41,28.49,28.04,27.93,27.51,34.19,34.60,34.81,34.63,34.75,34.71,34.71,34.46,34.16,32.66,30.61,29.03,28.29,28.00,27.83,27.54,34.21,34.51,34.58,34.58,34.45,34.54,34.40,33.73,32.11,30.24,28.95,28.31,27.97,27.60,27.34,27.08,33.15,33.97,34.05,33.97,34.32,34.13,33.08,31.29,29.77,28.94,28.36,28.14,27.66,27.33,26.88,27.06";
   Serial.println(packet);
   //Serial.println(packet);
 }
-/*
+
 void setupMLX(){
   Wire.begin();
   Wire.setClock(400000); //Increase I2C clock speed to 400kHz
@@ -286,4 +288,3 @@ boolean isConnected() {
   }
   return (true);
 }
-*/
