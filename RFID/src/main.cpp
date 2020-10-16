@@ -29,6 +29,7 @@ WiFiServer server(80);
 MFRC522 mfrc522(SS_PIN, RST_PIN); // Create MFRC522 instance
 
 int estado=0;
+int cont = 0;
 int id;
 float temp[192];
 String packet;
@@ -86,9 +87,19 @@ void loop()
     }
     generatePacket();
     messageWIFI();
-    if(is_finished) estado =3;
+    if(is_finished) {
+      Serial.println("OPA!!!!");
+      Serial.println("-------------------------------------------------");
+      //Função para extrair a temperatura
+      //4 vezes
+      cont++;
+      if(cont==4) estado =3;
+      delay(5000);
+      is_finished = false;
+    }
   }
   if(estado==3){
+    cont = 0;
     is_finished = false;
     estado = 0;
   }
