@@ -32,6 +32,7 @@ int estado=0;
 int cont = 0;
 int id;
 float temp[192];
+float udder_temp[4];
 String packet;
 
 boolean validateID();
@@ -45,6 +46,7 @@ void setupMLX();
 void takeImage();
 void handle_root();
 void handle_finished();
+void extract_temp();
 boolean is_finished = false;
 String header;
 
@@ -91,9 +93,13 @@ void loop()
       Serial.println("OPA!!!!");
       Serial.println("-------------------------------------------------");
       //Função para extrair a temperatura
+      extract_temp();
       //4 vezes
       cont++;
-      if(cont==4) estado =3;
+      if(cont==4) {
+        for (int i=0;i<4;i++) Serial.println(udder_temp[i]);
+        estado =3;
+      }
       delay(5000);
       is_finished = false;
     }
@@ -229,6 +235,10 @@ void generatePacket(){
   packet = "";
   //packet.concat(String(id));
   //packet.concat(";");
+  Serial.print("cont: ");
+  Serial.println(cont+1);
+  packet.concat(String(cont+1));
+  packet.concat(";");
   for(int i=0;i<192;i++){
     packet.concat(String(temp[i]));
     if( i!=191) packet.concat(",");
@@ -298,4 +308,11 @@ boolean isConnected() {
     return (false);    //Sensor did not ACK
   }
   return (true);
+}
+
+void extract_temp(){
+  float result = temp[87]*0.1 + temp[88]*0.1 + temp[103]*0.7 + temp[104]*0.1;
+  udder_temp[cont] = result;
+  Serial.print("Teste de temp :");
+  Serial.println(result);
 }
