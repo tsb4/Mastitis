@@ -3,10 +3,19 @@
 #include <MFRC522.h>
 #include <Arduino.h>
 #include <WiFi.h> 
+#include<EloquentTinyML.h>
 //#include <ESP8266WiFi.h> 
 //#include <ESP8266WebServer.h>
 #include "MLX90641_API.h"
 #include "MLX9064X_I2C_Driver.h"
+#include "MasModel.h"
+
+#define NUMBER_OF_INPUTS 4
+#define NUMBER_OF_OUTPUTS 3
+// in future projects you may need to tweek this value: it's a trial and error process
+#define TENSOR_ARENA_SIZE 2*1024
+
+Eloquent::TinyML::TfLite<NUMBER_OF_INPUTS, NUMBER_OF_OUTPUTS, TENSOR_ARENA_SIZE> ml(MasModel);
 
 #define debug  Serial
 
@@ -33,6 +42,7 @@ int cont = 0;
 int id;
 float temp[192];
 float udder_temp[4];
+float* predicted;
 String packet;
 
 boolean validateID();
@@ -47,6 +57,7 @@ void takeImage();
 void handle_root();
 void handle_finished();
 void extract_temp();
+void forward_network();
 boolean is_finished = false;
 String header;
 
@@ -105,6 +116,7 @@ void loop()
     }
   }
   if(estado==3){
+    forward_network();
     cont = 0;
     is_finished = false;
     estado = 0;
@@ -315,4 +327,18 @@ void extract_temp(){
   udder_temp[cont] = result;
   Serial.print("Teste de temp :");
   Serial.println(result);
+}
+
+void forward_network(){
+  float input[4] = {37.5, 38.0,  38.3, 38.0 };
+  predicted = ml.predict(udder_temp);
+  //Serial.print("Res(");
+  ////Serial.print(x);
+  //Serial.print(") = ");
+  //Serial.print(y);
+  Serial.print("\t predicted: ");
+  Serial.println(predicted[0]);
+  Serial.println(predicted[1]);
+  Serial.println(predicted[2]);
+  delay(1000);
 }
